@@ -23,7 +23,7 @@ import static com.fasterxml.jackson.databind.cfg.CoercionInputShape.Array;
 @Transactional
 public class OrderService {
     private final OrderRepository orderRepository ;
-    private final WebClient webClient ;
+    private final WebClient.Builder webClientBuilder ;
     public void placeOrder( OrderRequest orderRequest){
         Order order = new Order();
         order.setOrderNumber(UUID.randomUUID().toString());
@@ -38,7 +38,7 @@ public class OrderService {
         List<String> skuCodes =order.getOrderLineItemsList().stream().map(orderLineItems -> orderLineItems.getSkuCode()).toList();
 
         //  check whether products are available
-        InventoryResponse[] inventoryResponses = webClient.get().uri("http://localhost:8091/api/inventory",
+        InventoryResponse[] inventoryResponses = webClientBuilder.build().get().uri("http://inventory-service/api/inventory",
                 uriBuilder -> uriBuilder.queryParam("skuCode",skuCodes).build()).
                 retrieve().bodyToMono(InventoryResponse[].class).block();
    boolean allProductsInStock = Arrays.stream(inventoryResponses).allMatch(inventoryResponse -> inventoryResponse.isInStock());
